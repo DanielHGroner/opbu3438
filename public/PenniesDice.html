@@ -1,6 +1,13 @@
 <html>
     <head>
         <style>
+body {
+    margin: 10px 0px 0px 20px;
+}
+.main-title {
+    font-size: 24px;
+    font-weight: bold;
+}
 table {
   border-collapse: collapse;
 }
@@ -120,7 +127,7 @@ td {
                lastRolls[i] = rollDice();
             }
             ncycle += 1;
-            newline = "<br>Cycle " + ncycle + "<br>" /* + "dice: " */;
+            newline = "<br>Production Cycle " + ncycle + "<br>" /* + "dice: " */;
             /* for (var i=0; i<lastRolls.length; i++) {
                 newline += " " + lastRolls[i];
             } */
@@ -182,7 +189,7 @@ td {
             sumcell = "&sum;=" + totalWip();
             invtable = genHtmlTableRow("wip:&nbsp;&nbsp;&nbsp;", inventory, 1, inventory.length-1,sumcell);
             element = document.getElementById("randtext");
-            element.innerHTML = "<br>" + invtable;
+            element.innerHTML = "<br>" + "Initial Inventory:" + "<br>" + invtable;
         }
 
         function showNcycles(n) {
@@ -231,7 +238,7 @@ td {
     </head>
     <body onload="onload()">
         <div>
-            Production and Inventory Simulation (Dice and Pennies)
+            <span class="main-title">Production and Inventory Simulation (Dice and Pennies)</span>
             <img src="res/img/fordham-gabelli.jpeg" class='logo'><br><br>
             <button type="button" onclick="clickRollDice()">Roll Dice</button>&nbsp;
             <button type="button" onclick="clickClear()">Clear</button>&nbsp;
