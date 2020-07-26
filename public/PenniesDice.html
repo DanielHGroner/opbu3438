@@ -28,6 +28,10 @@ td {
     height: 20px;
     padding-right: 12px;
 }
+.button-roll {
+    color: white;
+    background-color: mediumseagreen;
+}
         </style>
         <script>
         var ncycle = 0;
@@ -36,21 +40,32 @@ td {
         var inventory = [];
         var lastRolls = [0, 0, 0, 0, 0, 0];
 
+        /* generate a random integer between min and max (inclusive) */
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
 
+        /* round a number to a precision # of decimal places */
         function round(value, precision) {
             var multiplier = Math.pow(10, precision || 0);
             return Math.round(value * multiplier) / multiplier;
         }
 
+        /* return a random number between 1 and 6 */
         function rollDice() {
             roll = getRandomInt(1, 6);
             /*console.log(roll);*/
             return roll;
         }
 
+        /* generate html for a table row based on an array of values */
+        /* pre-label - optional label for 1st cell
+         * a - the values array
+         * ix0 - the starting index from the array to include
+         * the ending index of the array to inxlude
+         * post-label - optional label for a last cell
+         * bgcolors - optional colors for the values array cells
+         */
         function genHtmlTableRow(prelabel, a, ix0, ixn, postlabel, bgcolors) {
             var r = "<table><tr>";
             if (prelabel != "")
@@ -71,11 +86,8 @@ td {
             return r;
         }
 
+        /* generate a set of images for dice rolls */
         function genHtmlTableRowDice(prelabel, a, ix0, ixn, postlabel) {
-            /*var r = "<table><tr>";
-            if (prelabel != "")
-               r += "<td>" + prelabel + "</td>"; */
-
             r = "rolls: ";
             for (var i=ix0; i<ixn; i++) {
                 if (a[i] <= 6) {
@@ -90,13 +102,10 @@ td {
                    r += "<td>" + a[i] + "</td>";
                 }
             }
-
-            /*if (postlabel != "")
-               r += "<td>" + postlabel + "</td>";
-            r += "</tr></table>";*/
             return r;
         }
 
+        /* initial the inventory; item 0 is raw materials before first workstation */
         function initInventory(stations, wip) {
             inventory = [1000]; /* large number of raw materials to start */
             for (var i=0; i<stations-1; i++)
@@ -107,6 +116,7 @@ td {
             showInitialInventory();
         }
 
+        /* determine the total wip (excluding the raw materials) */
         function totalWip() {
             total = 0;
             for (var i=1; i<stations; i++)
@@ -114,6 +124,7 @@ td {
             return total;
         }
 
+        /* determine the maximum wip */
         function maxWip() {
             m = 0;
             for (var i=1; i<stations; i++)
@@ -122,16 +133,13 @@ td {
             return m;
         }
 
+        /* callback for roll of dice */
         function clickRollDice() {
             for (var i = 0; i < lastRolls.length; i++) {
                lastRolls[i] = rollDice();
             }
             ncycle += 1;
             newline = "<br>Production Cycle " + ncycle + "<br>" /* + "dice: " */;
-            /* for (var i=0; i<lastRolls.length; i++) {
-                newline += " " + lastRolls[i];
-            } */
-            /* newline += genHtmlTableRow("dice:", lastRolls, 0, lastRolls.length, ""); */
             newline += genHtmlTableRowDice("dice:", lastRolls, 0, lastRolls.length, "");
             /*console.log(newline); */
             element = document.getElementById("randtext");
@@ -139,6 +147,7 @@ td {
             updateInventory();
         }
 
+        /* determine colors for inventory to highlight min and max wip */
         function invColors(inventory) {
             min = 9999;
             max = 0;
@@ -155,6 +164,7 @@ td {
             return colors;
         }
 
+        /* update the inventory based on the production cycle */
         function updateInventory(element) {
             for (var i=lastRolls.length-1; i>=0; i--) {
                 var mfg = lastRolls[i];
@@ -163,16 +173,11 @@ td {
                 inventory[i] -= mfg;
                 inventory[i+1] += mfg;
             }
-            /*newline = "wip:";
-            for (var i=1; i<inventory.length-1; i++) {
-                newline += " " + inventory[i];
-            }*/
             sumcell = "&sum;=" + totalWip();
             colors = invColors(inventory);
             invtable = genHtmlTableRow("wip:&nbsp;&nbsp;&nbsp;", inventory, 1, inventory.length-1,sumcell, colors);
             var newline = invtable;
             /*console.log(invtable);*/
-            /*sumcell = " (total=" + totalWip() + "; max=" + maxWip() + ")";*/
             finished = inventory[inventory.length-1];
             avg = finished / ncycle;
             avg = round(avg, 1);
@@ -185,6 +190,7 @@ td {
             showNcycles(ncycle);
         }
 
+        /* display the initial inventory */
         function showInitialInventory() {
             sumcell = "&sum;=" + totalWip();
             invtable = genHtmlTableRow("wip:&nbsp;&nbsp;&nbsp;", inventory, 1, inventory.length-1,sumcell);
@@ -192,19 +198,19 @@ td {
             element.innerHTML = "<br>" + "Initial Inventory:" + "<br>" + invtable;
         }
 
+        /* update the screen item with the number of cycles that have run */
         function showNcycles(n) {
             element = document.getElementById("ncycles");
             element.innerHTML= n;
         }
 
+        /* callback for resetting the simulation */
         function clickClear() {
             element = document.getElementById("randtext");
             element.innerHTML = "";
             initInventory(stations, initWip);
             resetRolls();
             showNcycles("");
-
-            /* showInitialInventory(); */
         }
 
         function resetRolls() {
@@ -213,6 +219,7 @@ td {
                lastRolls.push(0);
         }
 
+        /* callback if # of stations is changed */
         function onchangeStations() {
            /* console.log('onchangeStations()'); */
            element = document.getElementById("stations");
@@ -222,6 +229,7 @@ td {
            clickClear();
         }
 
+        /* callback if initial wip is changed */
         function onchangeInitWip() {
            /* console.log('onchangeInitWip()') */
            element = document.getElementById("initwip");
@@ -240,18 +248,18 @@ td {
         <div>
             <span class="main-title">Production and Inventory Simulation (Dice and Pennies)</span>
             <img src="res/img/fordham-gabelli.jpeg" class='logo'><br><br>
-            <button type="button" onclick="clickRollDice()">Roll Dice</button>&nbsp;
-            <button type="button" onclick="clickClear()">Clear</button>&nbsp;
+            <button type="button" onclick="clickRollDice()" class='button-roll' title="simulate a single additional production cycle">Roll Dice</button>&nbsp;
+            <button type="button" onclick="clickClear()" title="reset the simulation">Clear</button>&nbsp;
 
             <label for="stations">Number of stations:</label>
-            <select name="stations" id="stations" onchange="onchangeStations()">
+            <select name="stations" id="stations" onchange="onchangeStations()" title="select number of workstations for simulation">
               <option value="2">2</option>
               <option value="4">4</option>
               <option value="6" selected>6</option>
             </select>&nbsp;
 
             <label for="initwip">Initial WIP:</label>
-            <select name="initwip" id="initwip" onchange="onchangeInitWip()">
+            <select name="initwip" id="initwip" onchange="onchangeInitWip()" title="select initial units of work-in-progress inventory between workstations">
               <option value="4">4</option>
               <option value="10">10</option>
               <option value="20">20</option>
