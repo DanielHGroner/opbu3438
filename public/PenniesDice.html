@@ -34,11 +34,12 @@ td {
 }
         </style>
         <script>
-        var ncycle = 0;
-        var initWip = 4;
-        var stations = 6;
-        var inventory = [];
-        var lastRolls = [0, 0, 0, 0, 0, 0];
+        /* global variables */
+        var ncycle = 0; /* number of production cycles that have been run */
+        var initWip = 4; /* initial wip */
+        var stations = 6; /* number of workstations */
+        var inventory = []; /* inventory */
+        var lastRolls = [0, 0, 0, 0, 0, 0]; /* last roll of dice */
 
         /* generate a random integer between min and max (inclusive) */
         function getRandomInt(min, max) {
@@ -133,18 +134,30 @@ td {
             return m;
         }
 
-        /* callback for roll of dice */
-        function clickRollDice() {
+        /* roll n dice and save rolls in global var lastRolls; increment ncycle */
+        function rollDices() {
             for (var i = 0; i < lastRolls.length; i++) {
                lastRolls[i] = rollDice();
             }
             ncycle += 1;
-            newline = "<br>Production Cycle " + ncycle + "<br>" /* + "dice: " */;
-            newline += genHtmlTableRowDice("dice:", lastRolls, 0, lastRolls.length, "");
+        }
+
+        /* callback for roll of dice */
+        function clickRollDice() {
+            rollDices();
+            displayNewCycleAndDice(ncycle);
+            updateInventory();
+            displayInventoryAndProduction();
+            displayCycleCount();
+        }
+
+        /* display next production cycle: header and dice images */
+        function displayNewCycleAndDice(cycleNum) {
+            newlines = "<br>Production Cycle " + cycleNum + "<br>" /* + "dice: " */;
+            newlines += genHtmlTableRowDice("dice:", lastRolls, 0, lastRolls.length, "");
             /*console.log(newline); */
             element = document.getElementById("randtext");
-            element.innerHTML = element.innerHTML + newline;
-            updateInventory();
+            element.innerHTML = element.innerHTML + newlines;            
         }
 
         /* determine colors for inventory to highlight min and max wip */
@@ -164,18 +177,24 @@ td {
             return colors;
         }
 
-        /* update the inventory based on the production cycle */
-        function updateInventory(element) {
+        /* simulate a cycle of production and update the inventory (pre/wip/finished) */
+        function updateInventory() {
+            /* approach is to update from last workstation to 1st */
             for (var i=lastRolls.length-1; i>=0; i--) {
                 var mfg = lastRolls[i];
                 if (mfg > inventory[i])
                    mfg = inventory[i];
+                /* each workstation takes from prior wip and delivers to wip */
                 inventory[i] -= mfg;
                 inventory[i+1] += mfg;
-            }
+            }            
+        }
+
+        /* update the inventory based on the production cycle */
+        function displayInventoryAndProduction() {
             sumcell = "&sum;=" + totalWip();
             colors = invColors(inventory);
-            invtable = genHtmlTableRow("wip:&nbsp;&nbsp;&nbsp;", inventory, 1, inventory.length-1,sumcell, colors);
+            invtable = genHtmlTableRow("WIP:&nbsp;&nbsp;&nbsp;", inventory, 1, inventory.length-1,sumcell, colors);
             var newline = invtable;
             /*console.log(invtable);*/
             finished = inventory[inventory.length-1];
@@ -184,24 +203,20 @@ td {
             newline += "Cumulative production: " + finished + " (Average: " + finished + '/' + ncycle +'=<b>' + avg + " units</b>)" + "<br>";
             element = document.getElementById("randtext");
             element.innerHTML = element.innerHTML + newline;
-
-            element2 = document.getElementById("ncycles");
-            element2.innerHTML= ncycle;
-            showNcycles(ncycle);
         }
 
         /* display the initial inventory */
         function showInitialInventory() {
             sumcell = "&sum;=" + totalWip();
-            invtable = genHtmlTableRow("wip:&nbsp;&nbsp;&nbsp;", inventory, 1, inventory.length-1,sumcell);
+            invtable = genHtmlTableRow("WIP:&nbsp;&nbsp;&nbsp;", inventory, 1, inventory.length-1,sumcell);
             element = document.getElementById("randtext");
-            element.innerHTML = "<br>" + "Initial Inventory:" + "<br>" + invtable;
+            element.innerHTML = "<br>" + "Initial Work in Process Inventory (WIP):" + "<br>" + invtable;
         }
 
         /* update the screen item with the number of cycles that have run */
-        function showNcycles(n) {
+        function displayCycleCount() {
             element = document.getElementById("ncycles");
-            element.innerHTML= n;
+            element.innerHTML= ncycle;
         }
 
         /* callback for resetting the simulation */
